@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -9,7 +10,6 @@ import {
   Key,
   Sparkles,
   ArrowRight,
-  CheckCircle2,
   Lock,
   Zap,
   Infinity,
@@ -20,7 +20,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 };
 
@@ -64,6 +64,12 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const [year, setYear] = useState(2026);
+
+  useEffect(() => {
+    void Promise.resolve().then(() => setYear(new Date().getFullYear()));
+  }, []);
+
   return (
     <div className="min-h-screen bg-cinematic bg-mesh relative overflow-hidden">
       {/* Ambient orbs */}
@@ -329,7 +335,7 @@ export default function LandingPage() {
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link href="/acceptable-use" className="hover:text-foreground transition-colors">Acceptable Use</Link>
           </div>
-          <p>© {new Date().getFullYear()} Nexora. All rights reserved.</p>
+          <p>© {year} Nexora. All rights reserved.</p>
         </div>
       </footer>
     </div>

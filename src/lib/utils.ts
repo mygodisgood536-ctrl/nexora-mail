@@ -1,6 +1,10 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+export const RETENTION_DAYS = 10;
+export const MAX_MESSAGE_BYTES = 25 * 1024 * 1024;
+export const DEFAULT_PLATFORM_DOMAIN = "nexora.mail";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

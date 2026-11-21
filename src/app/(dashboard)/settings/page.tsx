@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Settings, LogOut, Shield, Clock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";

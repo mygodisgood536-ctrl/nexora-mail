@@ -1,0 +1,30 @@
+name = "nexora-mail-inbound"
+main = "workers/email-worker.ts"
+compatibility_date = "2026-11-21"
+
+# Replace with the domain you attach to Cloudflare Email Routing.
+[vars]
+PLATFORM_DOMAIN = "nexora.mail"
+
+# Create this bucket first: `npx wrangler r2 bucket create nexora-messages`
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "nexora-messages"
+
+# Create these queues first:
+#   npx wrangler queues create nexora-inbound
+#   npx wrangler queues create nexora-inbound-dlq
+[[queues.producers]]
+queue = "nexora-inbound"
+binding = "INBOUND_QUEUE"
+
+[[queues.consumers]]
+queue = "nexora-inbound"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 5
+dead_letter_queue = "nexora-inbound-dlq"
+
+# Runs every minute to enforce 10-day expiry and finish soft-deletion cleanup.
+[triggers]
+crons = ["*/1 * * * *"]

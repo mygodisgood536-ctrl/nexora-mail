@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
+import { and, desc, eq, gt } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
-import { messages, aliases, mailboxes } from "@/db/schema";
-import { eq, and, desc, ne } from "drizzle-orm";
+import { aliases, mailboxes, messages } from "@/db/schema";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,6 +20,9 @@ export async function GET() {
     if (!mailbox) {
       return NextResponse.json({ messages: [] });
     }
+
+    const url = new URL(req.url);
+    const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 100);
 
     const rows = await db
       .select({
@@ -39,16 +42,19 @@ export async function GET() {
       .where(
         and(
           eq(messages.mailboxId, mailbox.id),
-          ne(messages.processingState, "deleted"),
-          ne(messages.processingState, "expired")
+          eq(messages.processingState, "stored"),
+          gt(messages.expiresAt, new Date())
         )
       )
       .orderBy(desc(messages.receivedAt))
-      .limit(100);
+      .limit(limit);
 
     return NextResponse.json({ messages: rows });
   } catch (err) {
     console.error("[messages GET]", err);
-    return NextResponse.json({ messages: [] });
+    return NextResponse.json(
+      { error: "Mailbox service is unavailable" },
+      { status: 503 }
+    );
   }
 }

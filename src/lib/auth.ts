@@ -1,16 +1,35 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { createHash } from "node:crypto";
 import { db } from "@/db";
-import { users, sessions, mailboxes } from "@/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import {
+  users,
+  sessions,
+  mailboxes,
+  emailVerificationTokens,
+} from "@/db/schema";
+import { eq, and, isNull, gt } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "dev-secret-change-me-in-production-32chars"
-);
 const COOKIE_NAME = "nexora_session";
 const SESSION_DAYS = 14;
+const VERIFICATION_HOURS = 24;
+
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET must be set to at least 32 characters in production");
+    }
+    return new TextEncoder().encode("dev-only-secret-change-before-production-32chars");
+  }
+  return new TextEncoder().encode(secret);
+}
+
+export function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -25,7 +44,7 @@ export async function verifyPassword(
 
 export async function createSession(userId: string, ip?: string, ua?: string) {
   const token = nanoid(48);
-  const tokenHash = await hashPassword(token); // simple hash for storage
+  const tokenHash = hashToken(token);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
 
@@ -41,7 +60,7 @@ export async function createSession(userId: string, ip?: string, ua?: string) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DAYS}d`)
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, jwt, {
@@ -61,18 +80,28 @@ export async function getSession() {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     const userId = payload.sub as string;
-    if (!userId) return null;
+    const jti = payload.jti as string;
+    if (!userId || !jti) return null;
 
-    const [user] = await db
-      .select()
+    const [row] = await db
+      .select({ user: users })
       .from(users)
-      .where(and(eq(users.id, userId), eq(users.status, "active")))
+      .innerJoin(sessions, eq(sessions.userId, users.id))
+      .where(
+        and(
+          eq(users.id, userId),
+          eq(users.status, "active"),
+          eq(sessions.tokenHash, hashToken(jti)),
+          isNull(sessions.revokedAt),
+          gt(sessions.expiresAt, new Date())
+        )
+      )
       .limit(1);
 
-    if (!user) return null;
-    return { user };
+    if (!row) return null;
+    return { user: row.user };
   } catch {
     return null;
   }
@@ -88,47 +117,109 @@ export async function requireAuth() {
 
 export async function destroySession() {
   const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, getJwtSecret());
+      const jti = payload.jti as string;
+      if (jti) {
+        await db
+          .update(sessions)
+          .set({ revokedAt: new Date() })
+          .where(eq(sessions.tokenHash, hashToken(jti)));
+      }
+    } catch {
+      // Invalid token — clearing the cookie below is sufficient.
+    }
+  }
   cookieStore.delete(COOKIE_NAME);
 }
 
+export async function revokeAllSessions(userId: string) {
+  await db
+    .update(sessions)
+    .set({ revokedAt: new Date() })
+    .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+}
+
 export async function registerUser(email: string, password: string, name?: string) {
-  const existing = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email.toLowerCase()))
-    .limit(1);
-
-  if (existing.length > 0) {
-    throw new Error("EMAIL_EXISTS");
-  }
-
+  const normalizedEmail = email.toLowerCase().trim();
   const passwordHash = await hashPassword(password);
 
   const [user] = await db
     .insert(users)
     .values({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       passwordHash,
       name: name || null,
       status: "active",
-      emailVerifiedAt: null, // verify later
+      role: "user",
+      emailVerifiedAt: null,
     })
+    .onConflictDoNothing()
     .returning();
 
-  // Create the one mailbox
-  await db.insert(mailboxes).values({
-    userId: user.id,
-    status: "active",
-  });
+  if (!user) {
+    throw new Error("EMAIL_EXISTS");
+  }
+
+  await db
+    .insert(mailboxes)
+    .values({ userId: user.id, status: "active" })
+    .onConflictDoNothing();
 
   return user;
+}
+
+export async function createVerificationToken(userId: string): Promise<string> {
+  const token = nanoid(48);
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + VERIFICATION_HOURS);
+
+  await db.insert(emailVerificationTokens).values({
+    userId,
+    tokenHash: hashToken(token),
+    expiresAt,
+  });
+
+  return token;
+}
+
+export async function consumeVerificationToken(token: string) {
+  const tokenHash = hashToken(token);
+
+  const [row] = await db
+    .select()
+    .from(emailVerificationTokens)
+    .where(eq(emailVerificationTokens.tokenHash, tokenHash))
+    .limit(1);
+
+  if (
+    !row ||
+    row.consumedAt ||
+    row.expiresAt.getTime() <= Date.now()
+  ) {
+    throw new Error("INVALID_TOKEN");
+  }
+
+  await db
+    .update(emailVerificationTokens)
+    .set({ consumedAt: new Date() })
+    .where(eq(emailVerificationTokens.tokenHash, tokenHash));
+
+  await db
+    .update(users)
+    .set({ emailVerifiedAt: new Date(), updatedAt: new Date() })
+    .where(eq(users.id, row.userId));
+
+  return row.userId;
 }
 
 export async function loginUser(email: string, password: string) {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.email, email.toLowerCase()))
+    .where(eq(users.email, email.toLowerCase().trim()))
     .limit(1);
 
   if (!user || !user.passwordHash) {

@@ -9,7 +9,6 @@ import {
   jsonb,
   uniqueIndex,
   index,
-  varchar,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -20,6 +19,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   name: text("name"),
   status: text("status").notNull().default("active"), // active | suspended | deleted
+  role: text("role").notNull().default("user"), // user | admin
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -119,8 +119,10 @@ export const messages = pgTable(
   (table) => [
     index("messages_mailbox_received_idx").on(table.mailboxId, table.receivedAt),
     index("messages_expires_at_idx").on(table.expiresAt),
+    index("messages_state_expiry_idx").on(table.processingState, table.expiresAt),
     index("messages_alias_id_idx").on(table.aliasId),
     index("messages_is_read_idx").on(table.mailboxId, table.isRead),
+    uniqueIndex("messages_provider_message_unique").on(table.providerMessageId),
   ]
 );
 
@@ -183,7 +185,35 @@ export const auditEvents = pgTable(
   ]
 );
 
-// Sessions (simple JWT-based, but store for revocation)
+// Single-use, expiring account verification tokens
+export const emailVerificationTokens = pgTable(
+  "email_verification_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("email_verification_user_idx").on(table.userId)]
+);
+
+// Durable, database-backed rate limiting for serverless environments
+export const rateLimits = pgTable(
+  "rate_limits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull().unique(),
+    windowStart: timestamp("window_start", { withTimezone: true }).notNull().defaultNow(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [index("rate_limits_window_idx").on(table.windowStart)]
+);
+
+// Sessions (JWT identity + stored record for revocation)
 export const sessions = pgTable(
   "sessions",
   {
@@ -198,7 +228,11 @@ export const sessions = pgTable(
     userAgent: text("user_agent"),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
   },
-  (table) => [index("sessions_user_id_idx").on(table.userId)]
+  (table) => [
+    index("sessions_user_id_idx").on(table.userId),
+    index("sessions_token_hash_idx").on(table.tokenHash),
+    index("sessions_expires_at_idx").on(table.expiresAt),
+  ]
 );
 
 // Relations

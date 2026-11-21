@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "messages_provider_message_unique" ON "messages" USING btree ("provider_message_id");

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AtSign,
@@ -38,13 +39,14 @@ export default function AliasesPage() {
   const [localPart, setLocalPart] = useState("");
   const [mode, setMode] = useState<"custom" | "random">("custom");
   const [copied, setCopied] = useState<string | null>(null);
+  const router = useRouter();
 
-  async function loadAliases() {
+  const loadAliases = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/aliases");
       if (res.status === 401) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
       const data = await res.json();
@@ -54,11 +56,11 @@ export default function AliasesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
 
   useEffect(() => {
-    loadAliases();
-  }, []);
+    void Promise.resolve().then(() => loadAliases());
+  }, [loadAliases]);
 
   async function createAlias() {
     let local = localPart.trim().toLowerCase();

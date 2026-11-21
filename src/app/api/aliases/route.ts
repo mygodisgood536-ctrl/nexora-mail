@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
-import { aliases, permanentAddressRegistry, mailboxes } from "@/db/schema";
-import { eq, and, ne } from "drizzle-orm";
+import { aliases, mailboxes } from "@/db/schema";
 import {
-  normalizeEmailLocalPart,
-  isValidLocalPart,
-  isReservedLocalPart,
-} from "@/lib/utils";
+  platformDomain,
+  randomLocalPart,
+  suggestionsFor,
+  validateLocalPart,
+} from "@/lib/aliases";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+import { recordAudit } from "@/lib/audit";
 
-const PLATFORM_DOMAIN = process.env.PLATFORM_DOMAIN || "nexora.mail";
+const schema = z.object({
+  localPart: z.string().max(64).optional(),
+  mode: z.enum(["custom", "random"]).default("custom"),
+});
 
 export async function GET() {
   const session = await getSession();
@@ -23,18 +29,17 @@ export async function GET() {
       .select()
       .from(aliases)
       .where(
-        and(
-          eq(aliases.userId, session.user.id),
-          ne(aliases.status, "deleted")
-        )
+        and(eq(aliases.userId, session.user.id), ne(aliases.status, "deleted"))
       )
       .orderBy(aliases.createdAt);
 
     return NextResponse.json({ aliases: rows });
   } catch (err) {
     console.error("[aliases GET]", err);
-    // Graceful empty when DB not connected
-    return NextResponse.json({ aliases: [] });
+    return NextResponse.json(
+      { error: "Alias service is unavailable" },
+      { status: 503 }
+    );
   }
 }
 
@@ -44,39 +49,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const verificationEnforced =
+    process.env.NODE_ENV === "production" || Boolean(process.env.RESEND_API_KEY);
+  if (verificationEnforced && !session.user.emailVerifiedAt) {
+    return NextResponse.json(
+      { error: "Verify your account email before creating an alias" },
+      { status: 403 }
+    );
+  }
+
   try {
-    const body = await req.json();
-    const schema = z.object({ localPart: z.string().min(1).max(64) });
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid local part" }, { status: 400 });
-    }
-
-    const local = normalizeEmailLocalPart(parsed.data.localPart);
-    if (!isValidLocalPart(local)) {
-      return NextResponse.json({ error: "Invalid alias format" }, { status: 400 });
-    }
-    if (isReservedLocalPart(local)) {
-      return NextResponse.json({ error: "This name is reserved" }, { status: 400 });
-    }
-
-    const fullAddress = `${local}@${PLATFORM_DOMAIN}`;
-
-    // Check permanent registry
-    const existing = await db
-      .select()
-      .from(permanentAddressRegistry)
-      .where(eq(permanentAddressRegistry.fullAddress, fullAddress))
-      .limit(1);
-
-    if (existing.length > 0) {
+    if (
+      !(await checkRateLimit(`alias-create:${session.user.id}`, 30, 60 * 60 * 1000))
+    ) {
       return NextResponse.json(
-        { error: "This address is already reserved and cannot be used" },
-        { status: 409 }
+        { error: "Alias creation limit reached. Please try again later." },
+        { status: 429 }
       );
     }
 
-    // Get mailbox
+    const parsed = schema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const domain = platformDomain();
+    const attempts: string[] = [];
+
+    if (parsed.data.mode === "random") {
+      for (let i = 0; i < 5; i += 1) {
+        attempts.push(randomLocalPart());
+      }
+    } else {
+      if (!parsed.data.localPart) {
+        return NextResponse.json({ error: "Invalid alias format" }, { status: 400 });
+      }
+      const validated = validateLocalPart(parsed.data.localPart);
+      if (!validated.ok) {
+        return NextResponse.json({ error: validated.error }, { status: 400 });
+      }
+      attempts.push(validated.localPart);
+    }
+
     const [mailbox] = await db
       .select()
       .from(mailboxes)
@@ -87,40 +101,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Mailbox not found" }, { status: 500 });
     }
 
-    // Transaction-like: registry first then alias
-    await db.insert(permanentAddressRegistry).values({
-      fullAddress,
-      localPart: local,
-      domain: PLATFORM_DOMAIN,
-      ownerUserId: session.user.id,
-      terminalState: "active",
-      everReserved: true,
-    });
+    for (const localPart of attempts) {
+      const fullAddress = `${localPart}@${domain}`;
 
-    const [alias] = await db
-      .insert(aliases)
-      .values({
-        mailboxId: mailbox.id,
-        userId: session.user.id,
-        localPart: local,
-        domain: PLATFORM_DOMAIN,
-        fullAddress,
-        status: "active",
-        permanent: true,
-      })
-      .returning();
+      const result = await db.execute(sql`
+        WITH reserved AS (
+          INSERT INTO permanent_address_registry
+            (full_address, local_part, domain, owner_user_id, terminal_state, ever_reserved, first_committed_at)
+          VALUES (${fullAddress}, ${localPart}, ${domain}, ${session.user.id}, 'active', true, NOW())
+          ON CONFLICT (full_address) DO NOTHING
+          RETURNING id
+        )
+        INSERT INTO aliases
+          (mailbox_id, user_id, local_part, domain, full_address, status, permanent, created_at)
+        SELECT ${mailbox.id}, ${session.user.id}, ${localPart}, ${domain}, ${fullAddress}, 'active', true, NOW()
+        FROM reserved
+        RETURNING id, full_address, local_part, domain, status, created_at, message_count
+      `);
 
-    return NextResponse.json({ alias }, { status: 201 });
-  } catch (err: any) {
-    console.error("[aliases POST]", err);
-    if (err?.code === "23505") {
-      return NextResponse.json(
-        { error: "This address is already reserved" },
-        { status: 409 }
-      );
+      const rows = (result as unknown as { rows: Record<string, unknown>[] }).rows;
+      if (rows.length > 0) {
+        await recordAudit({
+          action: "alias.created",
+          userId: session.user.id,
+          actorId: session.user.id,
+          resourceType: "alias",
+          resourceId: String(rows[0].id),
+          metadata: { fullAddress },
+          ipAddress: clientIp(req),
+        });
+        return NextResponse.json({ alias: rows[0] }, { status: 201 });
+      }
     }
+
+    const seed = parsed.data.mode === "random" ? "" : parsed.data.localPart || "";
     return NextResponse.json(
-      { error: "Failed to create alias. Ensure database is configured." },
+      {
+        error: "This address is already reserved and cannot be used",
+        suggestions: suggestionsFor(seed),
+      },
+      { status: 409 }
+    );
+  } catch (err) {
+    console.error("[aliases POST]", err);
+    return NextResponse.json(
+      { error: "Failed to create alias. Check server configuration." },
       { status: 500 }
     );
   }

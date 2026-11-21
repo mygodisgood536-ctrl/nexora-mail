@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Inbox,
@@ -9,15 +9,13 @@ import {
   Trash2,
   Mail,
   Clock,
-  Filter,
-  CheckCircle2,
-  Circle,
   AtSign,
   Loader2,
 } from "lucide-react";
 import { formatRelativeTime, formatExpiry, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Message = {
   id: string;
@@ -32,19 +30,29 @@ type Message = {
   hasAttachments: boolean;
 };
 
+type MessageDetail = {
+  text: string | null;
+  html: string | null;
+  attachments: Array<{ filename: string | null; mimeType: string; size: number }>;
+  remoteImagesBlocked: boolean;
+};
+
 export default function MailboxPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [detail, setDetail] = useState<MessageDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const router = useRouter();
 
-  async function loadMessages() {
+  const loadMessages = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/messages");
       if (res.status === 401) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
       const data = await res.json();
@@ -54,11 +62,25 @@ export default function MailboxPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
 
   useEffect(() => {
-    loadMessages();
-  }, []);
+    void Promise.resolve().then(() => loadMessages());
+  }, [loadMessages]);
+
+  async function openMessage(id: string) {
+    setSelected(id);
+    setDetail(null);
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/messages/${id}`);
+      if (res.ok) setDetail((await res.json()) as MessageDetail);
+    } catch {
+      // The list preview remains available if detail loading fails.
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
 
   async function markRead(id: string) {
     await fetch(`/api/messages/${id}`, {
@@ -178,7 +200,7 @@ export default function MailboxPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => {
-                      setSelected(msg.id);
+                      void openMessage(msg.id);
                       if (!msg.isRead) markRead(msg.id);
                     }}
                     className={cn(
@@ -275,9 +297,36 @@ export default function MailboxPage() {
                     </div>
                   </div>
                   <div className="prose prose-invert prose-sm max-w-none">
-                    <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {selectedMsg.preview || "No preview available. Full content is stored securely and will be loaded when message viewing is fully connected."}
-                    </p>
+                    {loadingDetail ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-violet-400" />
+                    ) : (
+                      <>
+                        <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                          {detail?.text ||
+                            selectedMsg.preview ||
+                            "No plain-text content available."}
+                        </p>
+                        {detail?.html && (
+                          <iframe
+                            title="Safe message content"
+                            sandbox=""
+                            referrerPolicy="no-referrer"
+                            className="mt-5 w-full min-h-40 rounded-lg border border-white/10 bg-[#0a0a12]"
+                            srcDoc={`<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:12px;background:#0a0a12;color:#e5e7eb;font-family:system-ui,sans-serif;font-size:14px;overflow-wrap:anywhere}a{color:#a78bfa}img{display:none}</style></head><body>${detail.html}</body></html>`}
+                          />
+                        )}
+                        {detail?.remoteImagesBlocked && (
+                          <p className="text-[11px] text-muted-foreground/60 mt-3">
+                            Remote images are blocked for privacy.
+                          </p>
+                        )}
+                        {detail && detail.attachments.length > 0 && (
+                          <p className="text-[11px] text-muted-foreground/60 mt-1">
+                            Attachments (not downloaded): {detail.attachments.map((a) => a.filename || a.mimeType).join(", ")}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
