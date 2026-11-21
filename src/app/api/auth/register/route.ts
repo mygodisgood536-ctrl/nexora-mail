@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  registerUser,
-  createSession,
-  createVerificationToken,
-} from "@/lib/auth";
-import { checkRateLimit, clientIp } from "@/lib/rate-limit";
-import { sendVerificationEmail } from "@/lib/email";
+import { registerUser, createSession } from "@/lib/auth";
+import { rateLimitOrAllow, clientIp } from "@/lib/rate-limit";
 import { recordAudit } from "@/lib/audit";
+import { isDbConfigured } from "@/db";
 
 const schema = z.object({
   email: z.string().email().max(254),
@@ -16,8 +12,15 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!isDbConfigured) {
+    return NextResponse.json(
+      { error: "Database is not configured. Set DATABASE_URL and run the migrations." },
+      { status: 503 }
+    );
+  }
+
   try {
-    if (!(await checkRateLimit(`register:${clientIp(req)}`, 5, 60 * 60 * 1000))) {
+    if (!(await rateLimitOrAllow(`register:${clientIp(req)}`, 5, 60 * 60 * 1000))) {
       return NextResponse.json(
         { error: "Too many attempts. Please try again later." },
         { status: 429 }
@@ -32,9 +35,6 @@ export async function POST(req: NextRequest) {
 
     const { email, password, name } = parsed.data;
     const user = await registerUser(email, password, name);
-
-    const token = await createVerificationToken(user.id);
-    const emailSent = await sendVerificationEmail(user.email, token);
 
     await createSession(
       user.id,
@@ -54,8 +54,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      verificationRequired: true,
-      verificationEmailSent: emailSent,
       user: { id: user.id, email: user.email, name: user.name },
     });
   } catch (err: unknown) {
@@ -64,6 +62,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 409 }
+      );
+    }
+    if (message === "JWT_SECRET_MISSING") {
+      return NextResponse.json(
+        { error: "Server is missing JWT_SECRET." },
+        { status: 503 }
+      );
+    }
+    if (message.includes("does not exist") || message.includes("42P01")) {
+      return NextResponse.json(
+        { error: "Database tables are missing. Run: npm run db:migrate" },
+        { status: 503 }
       );
     }
     console.error("[register]", err);

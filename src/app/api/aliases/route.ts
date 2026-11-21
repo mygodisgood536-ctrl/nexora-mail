@@ -10,7 +10,7 @@ import {
   suggestionsFor,
   validateLocalPart,
 } from "@/lib/aliases";
-import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimitOrAllow, clientIp } from "@/lib/rate-limit";
 import { recordAudit } from "@/lib/audit";
 
 const schema = z.object({
@@ -49,18 +49,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const verificationEnforced =
-    process.env.NODE_ENV === "production" || Boolean(process.env.RESEND_API_KEY);
-  if (verificationEnforced && !session.user.emailVerifiedAt) {
-    return NextResponse.json(
-      { error: "Verify your account email before creating an alias" },
-      { status: 403 }
-    );
-  }
-
   try {
     if (
-      !(await checkRateLimit(`alias-create:${session.user.id}`, 30, 60 * 60 * 1000))
+      !(await rateLimitOrAllow(`alias-create:${session.user.id}`, 30, 60 * 60 * 1000))
     ) {
       return NextResponse.json(
         { error: "Alias creation limit reached. Please try again later." },

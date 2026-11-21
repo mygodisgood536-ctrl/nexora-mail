@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/db";
 import { permanentAddressRegistry } from "@/db/schema";
 import { platformDomain, suggestionsFor, validateLocalPart } from "@/lib/aliases";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { rateLimitOrAllow } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   try {
     if (
-      !(await checkRateLimit(
+      !(await rateLimitOrAllow(
         `alias-availability:${session.user.id}`,
         120,
         60 * 1000

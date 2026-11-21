@@ -27,6 +27,19 @@ export async function checkRateLimit(
   return Number(rows[0]?.count ?? 0) <= limit;
 }
 
+export async function rateLimitOrAllow(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<boolean> {
+  try {
+    return await checkRateLimit(key, limit, windowMs);
+  } catch (err) {
+    console.warn("[Nexora] Rate limit unavailable, allowing request:", err);
+    return process.env.NODE_ENV !== "production";
+  }
+}
+
 export function clientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();

@@ -50,16 +50,3 @@ export async function sendEmail(
     return false;
   }
 }
-
-export async function sendVerificationEmail(
-  to: string,
-  token: string
-): Promise<boolean> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const url = `${appUrl}/verify?token=${encodeURIComponent(token)}`;
-  return sendEmail(
-    to,
-    "Verify your Nexora Mail account",
-    `Welcome to Nexora Mail.\n\nVerify your account contact address by opening this link within 24 hours:\n\n${url}\n\nIf you did not create an account, you can ignore this message.\n\nNexora Mail`
-  );
-}

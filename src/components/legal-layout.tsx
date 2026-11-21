@@ -15,7 +15,7 @@ export function LegalLayout({
           href="/"
           className="inline-flex items-center gap-2 mb-10 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <Mail className="h-4 w-4 text-violet-400" />
+          <Mail className="h-4 w-4 text-accent-400" />
           Nexora Mail
         </Link>
         <div className="glass-strong rounded-2xl p-8">

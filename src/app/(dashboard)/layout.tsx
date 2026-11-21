@@ -42,8 +42,8 @@ export default function DashboardLayout({
       {/* Sidebar desktop */}
       <aside className="hidden md:flex w-64 flex-col border-r border-white/5 glass-strong">
         <div className="p-5 flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <Mail className="h-4.5 w-4.5 text-white" />
+          <div className="h-9 w-9 rounded-lg border border-accent-700/60 flex items-center justify-center">
+            <Mail className="h-4.5 w-4.5 text-accent-300" />
           </div>
           <span className="text-lg font-semibold tracking-tight">Nexora</span>
         </div>
@@ -58,7 +58,7 @@ export default function DashboardLayout({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                   active
-                    ? "bg-violet-500/15 text-violet-300"
+                    ? "bg-accent-500/15 text-accent-300"
                     : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                 )}
               >
@@ -83,8 +83,8 @@ export default function DashboardLayout({
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-            <Mail className="h-4 w-4 text-white" />
+          <div className="h-8 w-8 rounded-lg border border-accent-700/60 flex items-center justify-center">
+            <Mail className="h-4 w-4 text-accent-300" />
           </div>
           <span className="font-semibold">Nexora</span>
         </div>
@@ -118,7 +118,7 @@ export default function DashboardLayout({
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium",
                       pathname.startsWith(item.href)
-                        ? "bg-violet-500/15 text-violet-300"
+                        ? "bg-accent-500/15 text-accent-300"
                         : "text-muted-foreground"
                     )}
                   >

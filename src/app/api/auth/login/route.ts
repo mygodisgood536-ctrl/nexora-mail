@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { loginUser, createSession } from "@/lib/auth";
-import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimitOrAllow, clientIp } from "@/lib/rate-limit";
 import { recordAudit } from "@/lib/audit";
+import { isDbConfigured } from "@/db";
 
 const schema = z.object({
   email: z.string().email(),
@@ -10,9 +11,16 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!isDbConfigured) {
+    return NextResponse.json(
+      { error: "Database is not configured. Set DATABASE_URL and run the migrations." },
+      { status: 503 }
+    );
+  }
+
   try {
     const ip = clientIp(req);
-    if (!(await checkRateLimit(`login:${ip}`, 10, 15 * 60 * 1000))) {
+    if (!(await rateLimitOrAllow(`login:${ip}`, 10, 15 * 60 * 1000))) {
       return NextResponse.json(
         { error: "Too many attempts. Please try again later." },
         { status: 429 }
@@ -52,7 +60,10 @@ export async function POST(req: NextRequest) {
     if (message === "INVALID_CREDENTIALS" || message === "ACCOUNT_SUSPENDED") {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
+    const detail = message.includes("does not exist") || message.includes("42P01")
+      ? "Database tables are missing. Run: npm run db:migrate"
+      : "Login failed. Please try again.";
     console.error("[login]", err);
-    return NextResponse.json({ error: "Login failed. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: detail }, { status: 500 });
   }
 }

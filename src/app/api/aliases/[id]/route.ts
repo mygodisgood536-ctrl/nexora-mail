@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
 import { aliases, permanentAddressRegistry } from "@/db/schema";
-import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimitOrAllow, clientIp } from "@/lib/rate-limit";
 import { recordAudit } from "@/lib/audit";
 
 type AliasStatus = "active" | "paused" | "deleted";
@@ -23,7 +23,7 @@ export async function PATCH(
 
   try {
     if (
-      !(await checkRateLimit(`alias-update:${session.user.id}`, 60, 60 * 60 * 1000))
+      !(await rateLimitOrAllow(`alias-update:${session.user.id}`, 60, 60 * 60 * 1000))
     ) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },

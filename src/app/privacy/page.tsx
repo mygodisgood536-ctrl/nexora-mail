@@ -8,7 +8,7 @@ export default function PrivacyPage() {
       <p>
         We collect only the information needed to create and protect your
         account: your login email, a password hash, and basic security metadata.
-        Account verification uses expiring, single-use tokens.
+        No phone number or email verification code is required to use the service.
       </p>
       <p>
         Email received at your aliases is processed transiently so it can be

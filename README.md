@@ -22,14 +22,14 @@ Create permanent email aliases on platform-owned domains. Every user gets **one 
 | Database | Neon PostgreSQL + Drizzle ORM |
 | Inbound email | Cloudflare Email Routing → Email Worker → Queues |
 | Object storage | Cloudflare R2 (private) |
-| Auth | JWT + revocable DB sessions (jose + bcrypt), httpOnly cookie |
-| Notifications | Resend (account verification / security email) |
+| Auth | Password-only: bcrypt hash + JWT with revocable DB sessions, httpOnly cookie. No email or phone OTP. |
+| Notifications | Optional (Resend) — no verification code is required to use the product |
 
 ## What is implemented
 
 **App / API (deployed on Vercel)**
-- Registration, login, logout with real session revocation and DB-backed rate limits
-- Single-use, expiring account verification tokens + verification/resend endpoints
+- Registration, login, logout with bcrypt password hashing, real session revocation, and DB-backed rate limits
+- Password visibility toggle on both auth forms; no email or phone verification is required
 - `/api/auth/me` account + usage summary
 - One mailbox per user, created idempotently at signup
 - Custom and random alias creation with debounced availability checks and suggestions
@@ -67,12 +67,14 @@ Checks: `npm run lint`, `npm run typecheck`, `npm run worker:typecheck`, `npm ru
 2. Copy the **pooled** connection string into `DATABASE_URL` in Vercel and in your local `.env.local`.
 3. Run `npm run db:migrate` once (locally or from a machine with `DATABASE_URL` set).
 
-### 2. Resend (account verification / security email)
-1. Create a Resend API key and verify a sending domain.
-2. Set `RESEND_API_KEY` and `NOTIFICATION_FROM_EMAIL` in Vercel.
-3. Set `NEXT_PUBLIC_APP_URL` to your deployed app URL.
+### 2. Required environment variables
+- `DATABASE_URL` — Neon pooled connection string (required)
+- `JWT_SECRET` — any strong random string, ideally 32+ characters (required)
+- `PLATFORM_DOMAIN` / `NEXT_PUBLIC_PLATFORM_DOMAIN` — your email domain (required)
+- `NEXT_PUBLIC_APP_URL` — your deployed URL (required for optional links)
+- `RESEND_API_KEY` / `NOTIFICATION_FROM_EMAIL` — **optional**, only for security notices
 
-> Without `RESEND_API_KEY`, production requires verification before alias creation, so users cannot create aliases. This is intentional — configure Resend before launch.
+> Sign-up, sign-in and mailbox use require **no** email or phone verification code.
 
 ### 3. Cloudflare R2 (private message content)
 ```bash
@@ -102,12 +104,12 @@ Import the repo, add all environment variables from `.env.example`, deploy. Set 
 ## Implementation status
 
 - [x] Database schema, migrations, permanent registry, idempotency, audit, rate limits
-- [x] Auth, verified sessions, verification flow, tenant isolation in every query
+- [x] Password-only auth, revocable sessions, tenant isolation in every query
 - [x] Alias creation/availability/generation/pause/reactivate/retire
 - [x] Mailbox list, detail, safe HTML rendering, manual delete
 - [x] Worker: real email receive, MIME parse, R2 store, queue processing, expiry sweep
 - [x] Lint, typecheck, worker typecheck, production build pass
-- [ ] **Your setup required:** Neon, Resend, R2 API token, Cloudflare queues/worker, domain + Email Routing
+- [ ] **Your setup required:** Neon (DATABASE_URL + migrations), JWT_SECRET, R2 API token, Cloudflare queues/worker, domain + Email Routing
 - [ ] **Verify with real traffic:** 25 MiB end-to-end, provider limits, cost, queue backlog/outage drill
 - [ ] Admin UI (API exists; UI intentionally not added to avoid changing the finished design)
 - [ ] Final legal review of Terms / Privacy / Acceptable Use

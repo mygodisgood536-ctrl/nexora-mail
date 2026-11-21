@@ -4,6 +4,8 @@ import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
 
+export const isDbConfigured = Boolean(connectionString);
+
 if (!connectionString) {
   console.warn(
     "[Nexora] DATABASE_URL is not set. Database operations will fail until configured."

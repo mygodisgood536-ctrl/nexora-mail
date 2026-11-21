@@ -122,7 +122,7 @@ export default function MailboxPage() {
       <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold flex items-center gap-2">
-            <Inbox className="h-5 w-5 text-violet-400" />
+            <Inbox className="h-5 w-5 text-accent-400" />
             Mailbox
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -149,7 +149,7 @@ export default function MailboxPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search messages..."
-                className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-1 focus:ring-accent-500/50"
               />
             </div>
             <div className="flex gap-1">
@@ -160,7 +160,7 @@ export default function MailboxPage() {
                   className={cn(
                     "px-3 py-1 rounded-md text-xs font-medium transition-colors",
                     filter === f
-                      ? "bg-violet-500/20 text-violet-300"
+                      ? "bg-accent-500/20 text-accent-300"
                       : "text-muted-foreground hover:bg-white/5"
                   )}
                 >
@@ -173,12 +173,12 @@ export default function MailboxPage() {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-accent-400" />
               </div>
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-                <div className="h-14 w-14 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-4">
-                  <Mail className="h-6 w-6 text-violet-400" />
+                <div className="h-14 w-14 rounded-2xl bg-accent-500/10 flex items-center justify-center mb-4">
+                  <Mail className="h-6 w-6 text-accent-400" />
                 </div>
                 <p className="font-medium">No messages yet</p>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -186,7 +186,7 @@ export default function MailboxPage() {
                 </p>
                 <Link
                   href="/aliases"
-                  className="mt-4 px-4 py-2 rounded-lg bg-violet-600/20 text-violet-300 text-sm hover:bg-violet-600/30 transition-colors"
+                  className="mt-4 px-4 py-2 rounded-lg bg-accent-600/20 text-accent-300 text-sm hover:bg-accent-600/30 transition-colors"
                 >
                   Create alias
                 </Link>
@@ -205,14 +205,14 @@ export default function MailboxPage() {
                     }}
                     className={cn(
                       "w-full text-left px-4 py-3.5 border-b border-white/5 hover:bg-white/[0.03] transition-colors",
-                      selected === msg.id && "bg-violet-500/10",
-                      !msg.isRead && "bg-violet-500/[0.04]"
+                      selected === msg.id && "bg-accent-500/10",
+                      !msg.isRead && "bg-accent-500/[0.04]"
                     )}
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-1.5">
                         {!msg.isRead ? (
-                          <div className="h-2 w-2 rounded-full bg-violet-400" />
+                          <div className="h-2 w-2 rounded-full bg-accent-400" />
                         ) : (
                           <div className="h-2 w-2" />
                         )}
@@ -240,7 +240,7 @@ export default function MailboxPage() {
                           {msg.subject || "(no subject)"}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] text-violet-400/80 truncate flex items-center gap-1">
+                          <span className="text-[11px] text-accent-400/80 truncate flex items-center gap-1">
                             <AtSign className="h-3 w-3" />
                             {msg.aliasAddress}
                           </span>
@@ -272,7 +272,7 @@ export default function MailboxPage() {
                 <div className="flex items-center gap-2 ml-auto">
                   <button
                     onClick={() => deleteMessage(selectedMsg.id)}
-                    className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
+                    className="p-2 rounded-lg hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -284,7 +284,7 @@ export default function MailboxPage() {
                     {selectedMsg.subject || "(no subject)"}
                   </h2>
                   <div className="flex items-center gap-3 mb-6 text-sm">
-                    <div className="h-10 w-10 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-300 font-medium">
+                    <div className="h-10 w-10 rounded-full bg-accent-500/20 flex items-center justify-center text-accent-300 font-medium">
                       {(selectedMsg.fromName || selectedMsg.fromAddress || "?")[0].toUpperCase()}
                     </div>
                     <div>
@@ -298,7 +298,7 @@ export default function MailboxPage() {
                   </div>
                   <div className="prose prose-invert prose-sm max-w-none">
                     {loadingDetail ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-violet-400" />
+                      <Loader2 className="h-5 w-5 animate-spin text-accent-400" />
                     ) : (
                       <>
                         <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -311,7 +311,7 @@ export default function MailboxPage() {
                             title="Safe message content"
                             sandbox=""
                             referrerPolicy="no-referrer"
-                            className="mt-5 w-full min-h-40 rounded-lg border border-white/10 bg-[#0a0a12]"
+                            className="mt-5 w-full min-h-40 rounded-lg border border-white/10 bg-[#14110e]"
                             srcDoc={`<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;padding:12px;background:#0a0a12;color:#e5e7eb;font-family:system-ui,sans-serif;font-size:14px;overflow-wrap:anywhere}a{color:#a78bfa}img{display:none}</style></head><body>${detail.html}</body></html>`}
                           />
                         )}

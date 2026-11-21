@@ -2,27 +2,24 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { createHash } from "node:crypto";
 import { db } from "@/db";
-import {
-  users,
-  sessions,
-  mailboxes,
-  emailVerificationTokens,
-} from "@/db/schema";
+import { users, sessions, mailboxes } from "@/db/schema";
 import { eq, and, isNull, gt } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 
 const COOKIE_NAME = "nexora_session";
 const SESSION_DAYS = 14;
-const VERIFICATION_HOURS = 24;
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) {
+  if (!secret) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("JWT_SECRET must be set to at least 32 characters in production");
+      throw new Error("JWT_SECRET_MISSING");
     }
     return new TextEncoder().encode("dev-only-secret-change-before-production-32chars");
+  }
+  if (secret.length < 32) {
+    console.warn("[Nexora] JWT_SECRET is shorter than 32 characters.");
   }
   return new TextEncoder().encode(secret);
 }
@@ -169,50 +166,6 @@ export async function registerUser(email: string, password: string, name?: strin
     .onConflictDoNothing();
 
   return user;
-}
-
-export async function createVerificationToken(userId: string): Promise<string> {
-  const token = nanoid(48);
-  const expiresAt = new Date();
-  expiresAt.setHours(expiresAt.getHours() + VERIFICATION_HOURS);
-
-  await db.insert(emailVerificationTokens).values({
-    userId,
-    tokenHash: hashToken(token),
-    expiresAt,
-  });
-
-  return token;
-}
-
-export async function consumeVerificationToken(token: string) {
-  const tokenHash = hashToken(token);
-
-  const [row] = await db
-    .select()
-    .from(emailVerificationTokens)
-    .where(eq(emailVerificationTokens.tokenHash, tokenHash))
-    .limit(1);
-
-  if (
-    !row ||
-    row.consumedAt ||
-    row.expiresAt.getTime() <= Date.now()
-  ) {
-    throw new Error("INVALID_TOKEN");
-  }
-
-  await db
-    .update(emailVerificationTokens)
-    .set({ consumedAt: new Date() })
-    .where(eq(emailVerificationTokens.tokenHash, tokenHash));
-
-  await db
-    .update(users)
-    .set({ emailVerifiedAt: new Date(), updatedAt: new Date() })
-    .where(eq(users.id, row.userId));
-
-  return row.userId;
 }
 
 export async function loginUser(email: string, password: string) {

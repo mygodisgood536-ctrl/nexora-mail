@@ -1,66 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-  Mail,
-  Shield,
-  Clock,
-  Key,
-  Sparkles,
-  ArrowRight,
-  Lock,
-  Zap,
-  Infinity,
-} from "lucide-react";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  }),
-};
+import { ArrowRight, Mail, Clock, Shield, KeyRound, AtSign } from "lucide-react";
 
 const features = [
   {
-    icon: Infinity,
-    title: "Permanent Aliases",
-    description:
-      "Once created, an address is yours forever. Never recycled, never reassigned — even after deletion.",
+    title: "Permanent by design",
+    body: "An address you create stays reserved. It is never recycled or handed to someone else, even after you retire it.",
   },
   {
-    icon: Mail,
-    title: "One Private Mailbox",
-    description:
-      "All your aliases deliver into a single secure internal mailbox. No external forwarding needed.",
+    title: "One mailbox, many aliases",
+    body: "Every alias you own delivers into the same private mailbox. Nothing is forwarded to an external inbox.",
   },
   {
-    icon: Clock,
-    title: "10-Day Auto-Expiry",
-    description:
-      "Messages automatically delete after 10 days. Privacy by design, not by configuration.",
+    title: "Content expires in ten days",
+    body: "Messages are removed automatically ten days after receipt. Deleting a message never releases its alias.",
   },
-  {
-    icon: Key,
-    title: "Built for OTPs & Alerts",
-    description:
-      "Perfect for verification codes, login alerts, password resets, and account notifications.",
-  },
-  {
-    icon: Shield,
-    title: "Zero Forwarding",
-    description:
-      "Your messages stay inside Nexora. We never send them to Gmail, Outlook, or any external inbox.",
-  },
-  {
-    icon: Lock,
-    title: "Tenant Isolation",
-    description:
-      "Every mailbox is strictly isolated. No cross-user access is possible by design.",
-  },
+];
+
+const previews = [
+  { from: "GitHub", subject: "Your verification code is 847291", alias: "github-otp", time: "2m" },
+  { from: "Stripe", subject: "Payment receipt for Invoice #3921", alias: "billing", time: "1h" },
+  { from: "Notion", subject: "Confirm your email address", alias: "work-login", time: "3h" },
 ];
 
 export default function LandingPage() {
@@ -71,271 +33,156 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-cinematic bg-mesh relative overflow-hidden">
-      {/* Ambient orbs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px] animate-float" />
-        <div className="absolute top-1/3 -left-32 h-80 w-80 rounded-full bg-indigo-600/15 blur-[100px] animate-float" style={{ animationDelay: "2s" }} />
-        <div className="absolute bottom-20 right-1/4 h-64 w-64 rounded-full bg-purple-500/10 blur-[80px] animate-float" style={{ animationDelay: "4s" }} />
-      </div>
-
-      {/* Navigation */}
-      <motion.nav
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative z-50 flex items-center justify-between px-6 py-5 max-w-7xl mx-auto"
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <Mail className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-semibold tracking-tight">Nexora</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Sign in
+    <div className="min-h-screen bg-cinematic text-foreground">
+      <header className="border-b border-[#26221d]">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg border border-accent-700/60 flex items-center justify-center">
+              <Mail className="h-4 w-4 text-accent-300" />
+            </div>
+            <span className="text-base font-semibold tracking-tight">Nexora Mail</span>
           </Link>
-          <Link
-            href="/register"
-            className="px-5 py-2.5 text-sm font-medium rounded-full bg-violet-600 hover:bg-violet-500 text-white transition-all shadow-lg shadow-violet-600/25 hover:shadow-violet-500/40"
-          >
-            Get started
-          </Link>
-        </div>
-      </motion.nav>
-
-      {/* Hero */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32 text-center">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col items-center"
-        >
-          <motion.div
-            custom={0}
-            variants={fadeUp}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm text-violet-300 mb-8"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Permanent aliases · Private mailbox · 10-day retention</span>
-          </motion.div>
-
-          <motion.h1
-            custom={1}
-            variants={fadeUp}
-            className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight max-w-4xl leading-[1.1]"
-          >
-            One mailbox.
-            <br />
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent glow-text">
-              Infinite permanent aliases.
-            </span>
-          </motion.h1>
-
-          <motion.p
-            custom={2}
-            variants={fadeUp}
-            className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl leading-relaxed"
-          >
-            Create permanent email addresses for every website and service.
-            Receive OTPs, verifications, and alerts in one private internal
-            mailbox. No forwarding. No recycling. Ever.
-          </motion.p>
-
-          <motion.div
-            custom={3}
-            variants={fadeUp}
-            className="mt-10 flex flex-col sm:flex-row items-center gap-4"
-          >
+          <nav className="flex items-center gap-6 text-sm">
+            <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
+              Sign in
+            </Link>
             <Link
               href="/register"
-              className="group flex items-center gap-2 px-8 py-3.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-medium text-base transition-all shadow-xl shadow-violet-600/30 hover:shadow-violet-500/50 hover:scale-[1.02]"
+              className="px-4 py-2 rounded-lg border border-accent-700/60 text-accent-200 hover:bg-accent-700/10 transition-colors"
             >
-              Create your first alias
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+              Create account
             </Link>
-            <Link
-              href="#how-it-works"
-              className="px-8 py-3.5 rounded-full glass text-sm font-medium hover:bg-white/5 transition-colors"
-            >
-              See how it works
-            </Link>
-          </motion.div>
-        </motion.div>
+          </nav>
+        </div>
+      </header>
 
-        {/* Product preview card */}
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-24 relative mx-auto max-w-4xl"
-        >
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-violet-600/30 via-purple-500/20 to-indigo-600/30 blur-xl" />
-          <div className="relative glass-strong rounded-2xl p-1 overflow-hidden">
-            <div className="rounded-xl bg-[#0a0a12] overflow-hidden">
-              {/* Fake browser chrome */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
-                <div className="flex gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 rounded-md bg-white/5 text-xs text-muted-foreground">
-                    app.nexora.mail/mailbox
-                  </div>
-                </div>
-              </div>
-              {/* Fake inbox */}
-              <div className="p-6 space-y-3">
-                {[
-                  { from: "GitHub", subject: "Your verification code is 847291", alias: "github-otp", time: "2m ago", unread: true },
-                  { from: "Stripe", subject: "Payment receipt for Invoice #3921", alias: "billing", time: "1h ago", unread: true },
-                  { from: "Notion", subject: "Confirm your email address", alias: "work-login", time: "3h ago", unread: false },
-                  { from: "Vercel", subject: "Deployment succeeded — production", alias: "dev-alerts", time: "5h ago", unread: false },
-                ].map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + i * 0.1 }}
-                    className={`flex items-center gap-4 p-3.5 rounded-xl transition-colors ${
-                      msg.unread ? "bg-violet-500/10 border border-violet-500/20" : "bg-white/[0.02] border border-transparent"
-                    }`}
-                  >
-                    <div className={`h-2 w-2 rounded-full ${msg.unread ? "bg-violet-400" : "bg-transparent"}`} />
-                    <div className="flex-1 min-w-0 text-left">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm ${msg.unread ? "font-semibold text-white" : "text-muted-foreground"}`}>
-                          {msg.from}
-                        </span>
-                        <span className="text-xs text-muted-foreground/60 truncate">
-                          → {msg.alias}@nexora.mail
-                        </span>
-                      </div>
-                      <p className={`text-sm truncate ${msg.unread ? "text-foreground/90" : "text-muted-foreground"}`}>
-                        {msg.subject}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0">{msg.time}</span>
-                  </motion.div>
-                ))}
-              </div>
+      <main>
+        <section className="max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-14 md:gap-20 items-center">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent-400 mb-5">
+              Permanent email aliases
+            </p>
+            <h1 className="text-4xl md:text-5xl font-semibold leading-[1.12] tracking-tight">
+              One mailbox.
+              <br />
+              <span className="text-accent-200">Every address you own.</span>
+            </h1>
+            <p className="mt-6 text-base leading-relaxed text-muted-foreground max-w-lg">
+              Create a separate address for each website and service. Verification codes,
+              login alerts, and password resets all arrive in one private mailbox.
+              Nothing is forwarded. No address is ever reused.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-semibold transition-colors"
+              >
+                Create your account
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="#how-it-works"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                How it works
+              </Link>
+            </div>
+            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-2"><Shield className="h-3.5 w-3.5 text-accent-400" /> Private by default</span>
+              <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-accent-400" /> 10-day retention</span>
+              <span className="flex items-center gap-2"><KeyRound className="h-3.5 w-3.5 text-accent-400" /> Built for OTPs</span>
             </div>
           </div>
-        </motion.div>
-      </section>
 
-      {/* Features */}
-      <section id="how-it-works" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Designed for privacy & permanence
-          </h2>
-          <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-            Not disposable. Not a forwarding service. A proper permanent alias platform with a private internal mailbox.
-          </p>
-        </motion.div>
+          <div className="border border-[#2b2620] rounded-xl bg-[#171512] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#2b2620] flex items-center justify-between">
+              <span className="text-sm font-medium">Your mailbox</span>
+              <span className="text-xs text-muted-foreground">3 messages</span>
+            </div>
+            <div className="divide-y divide-[#26221d]">
+              {previews.map((item) => (
+                <div key={item.alias} className="px-5 py-4 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{item.from}</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate mt-0.5">{item.subject}</p>
+                    <p className="text-xs text-accent-300/80 mt-1.5 flex items-center gap-1">
+                      <AtSign className="h-3 w-3" /> {item.alias}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{item.time}</span>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-3 border-t border-[#2b2620] text-xs text-muted-foreground">
+              Messages are deleted automatically after 10 days.
+            </div>
+          </div>
+        </section>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="group glass rounded-2xl p-6 hover:bg-white/[0.04] transition-all duration-300 hover:border-violet-500/20"
-            >
-              <div className="h-11 w-11 rounded-xl bg-violet-500/10 flex items-center justify-center mb-4 group-hover:bg-violet-500/20 transition-colors">
-                <f.icon className="h-5 w-5 text-violet-400" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {f.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* How it works steps */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 py-20">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-bold">Three steps. Zero DNS.</h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {[
-            { step: "01", title: "Create an account", desc: "Sign up in seconds. You instantly get one private internal mailbox." },
-            { step: "02", title: "Generate aliases", desc: "Create custom or random permanent addresses on our domains." },
-            { step: "03", title: "Receive & forget", desc: "OTPs and alerts land in your mailbox. Auto-deleted after 10 days." },
-          ].map((s, i) => (
-            <motion.div
-              key={s.step}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              className="text-center"
-            >
-              <div className="text-5xl font-bold text-violet-500/30 mb-3">{s.step}</div>
-              <h3 className="text-lg font-semibold mb-2">{s.title}</h3>
-              <p className="text-sm text-muted-foreground">{s.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="glass-strong rounded-3xl p-12 relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-transparent" />
-          <div className="relative">
-            <Zap className="h-10 w-10 text-violet-400 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold mb-4">
-              Ready for permanent addresses?
-            </h2>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Stop exposing your real email. Start using permanent, controlled aliases today.
+        <section className="border-y border-[#26221d] bg-[#13110f]">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <h2 className="text-2xl font-semibold tracking-tight">Built for a narrow purpose</h2>
+            <p className="mt-2 text-sm text-muted-foreground max-w-xl">
+              A focused tool for account-related email — not a general-purpose mail provider.
             </p>
+            <div className="mt-10 grid md:grid-cols-3 gap-6">
+              {features.map((feature, i) => (
+                <div key={feature.title} className="border-t border-accent-700/50 pt-5">
+                  <span className="text-xs text-accent-400">0{i + 1}</span>
+                  <h3 className="mt-2 text-base font-medium">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="how-it-works" className="max-w-6xl mx-auto px-6 py-20">
+          <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
+          <div className="mt-8 grid md:grid-cols-3 gap-8">
+            {[
+              ["01", "Create an account", "A password is all you need. You get one private mailbox immediately."],
+              ["02", "Add aliases", "Choose a name or generate a random one. Each address is reserved permanently."],
+              ["03", "Receive and forget", "Messages land in your mailbox and disappear after ten days."],
+            ].map(([num, title, body]) => (
+              <div key={num}>
+                <p className="text-sm font-medium text-accent-400">{num}</p>
+                <h3 className="mt-2 text-base font-medium">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="max-w-6xl mx-auto px-6 pb-24">
+          <div className="border border-[#2b2620] rounded-xl bg-[#171512] px-8 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">Start with one address.</h2>
+              <p className="mt-2 text-sm text-muted-foreground">No DNS. No external mailbox. No forwarding.</p>
+            </div>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white font-medium transition-all shadow-xl shadow-violet-600/30"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-semibold transition-colors"
             >
-              Get started free
+              Create account
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-        </motion.div>
-      </section>
+        </section>
+      </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-10 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-violet-400" />
-            <span>Nexora Mail</span>
-          </div>
-          <div className="flex gap-6">
+      <footer className="border-t border-[#26221d] py-8 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <span>Nexora Mail</span>
+          <div className="flex gap-5">
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link href="/acceptable-use" className="hover:text-foreground transition-colors">Acceptable Use</Link>
           </div>
-          <p>© {year} Nexora. All rights reserved.</p>
+          <span>© {year} Nexora</span>
         </div>
       </footer>
     </div>
