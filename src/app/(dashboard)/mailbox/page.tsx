@@ -296,7 +296,7 @@ export default function MailboxPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="prose prose-invert prose-sm max-w-none">
+                  <div className="prose prose-sm max-w-none text-ink">
                     {loadingDetail ? (
                       <Loader2 className="h-5 w-5 animate-spin text-accent" />
                     ) : (
