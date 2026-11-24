@@ -3,36 +3,52 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, User, ArrowRight, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { AuthShell, fieldClass } from "@/components/auth-shell";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error("Use at least 8 characters");
-      return;
+    const next: Record<string, string> = {};
+    if (fullName.trim().length < 2) next.fullName = "Enter your full name";
+    if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username.trim().toLowerCase())) {
+      next.username = "3–32 letters, numbers, dots, dashes or underscores";
     }
+    if (password.length < 10 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      next.password = "At least 10 characters with a letter and a number";
+    }
+    setErrors(next);
+    if (Object.keys(next).length) return;
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ fullName, username, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Could not create account");
+        if (data.error?.includes("username")) {
+          setErrors({ username: data.error });
+        } else {
+          toast.error(data.error || "Could not create account");
+        }
         return;
       }
-      router.push("/mailbox");
+      sessionStorage.setItem("enrollmentToken", data.enrollmentToken);
+      sessionStorage.setItem("recoveryCodes", JSON.stringify(data.recoveryCodes));
+      router.push("/setup");
     } catch {
       toast.error("Could not reach the server");
     } finally {
@@ -41,97 +57,101 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cinematic flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="h-9 w-9 rounded-lg border border-accent-700/60 flex items-center justify-center">
-              <Mail className="h-4 w-4 text-accent-300" />
-            </div>
-            <span className="text-base font-semibold">Nexora Mail</span>
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">One private mailbox. Permanent aliases.</p>
+    <AuthShell
+      title="Create your account"
+      subtitle="Three details. Then you will set up your authenticator before you can sign in."
+      step={1}
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link href="/login" className="font-semibold text-accent hover:text-accent-hover">Sign in</Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <div>
+          <label htmlFor="fullName" className="mb-1.5 block text-sm font-semibold text-ink">Full name</label>
+          <input
+            id="fullName"
+            autoComplete="name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Ada Lovelace"
+            className={fieldClass}
+            aria-invalid={Boolean(errors.fullName)}
+          />
+          <FieldError message={errors.fullName} />
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-strong rounded-xl p-7 space-y-5">
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium text-muted-foreground">Name <span className="text-muted-foreground/60">(optional)</span></label>
-            <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                id="name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-lg bg-[#100f0d] border border-[#2b2620] text-sm focus:outline-none focus:ring-1 focus:ring-accent-500 focus:border-accent-500 placeholder:text-muted-foreground/50"
-                placeholder="Your name"
-              />
-            </div>
+        <div>
+          <label htmlFor="username" className="mb-1.5 block text-sm font-semibold text-ink">Username</label>
+          <input
+            id="username"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
+            placeholder="ada.lovelace"
+            className={fieldClass}
+            aria-invalid={Boolean(errors.username)}
+          />
+          <FieldError message={errors.username} />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-ink">Password</label>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 10 characters"
+              className={`${fieldClass} pr-12`}
+              aria-invalid={Boolean(errors.password)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-muted-foreground transition hover:bg-black/[0.04] hover:text-ink"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
+          <FieldError message={errors.password} />
+        </div>
 
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-lg bg-[#100f0d] border border-[#2b2620] text-sm focus:outline-none focus:ring-1 focus:ring-accent-500 focus:border-accent-500 placeholder:text-muted-foreground/50"
-                placeholder="you@example.com"
-              />
-            </div>
-          </div>
+        <div className="flex items-start gap-2 rounded-xl bg-accent-soft p-3 text-xs leading-relaxed text-ink">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+          <span>Your password is stored only as a one-way hash. No email or phone number is required.</span>
+        </div>
 
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-muted-foreground">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-11 pr-12 py-3 rounded-lg bg-[#100f0d] border border-[#2b2620] text-sm focus:outline-none focus:ring-1 focus:ring-accent-500 focus:border-accent-500 placeholder:text-muted-foreground/50"
-                placeholder="At least 8 characters"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-hover disabled:opacity-60"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Continue <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>}
+        </button>
+      </form>
+    </AuthShell>
+  );
+}
 
-          <div className="flex items-start gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 text-accent-400 shrink-0" />
-            <span>Your password is stored as a one-way hash. We never ask for phone or email verification codes to use your mailbox.</span>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-semibold transition-colors disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Create account <ArrowRight className="h-4 w-4" /></>}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Already have an account? <Link href="/login" className="text-accent-300 hover:text-accent-200 font-medium">Sign in</Link>
-        </p>
-      </div>
-    </div>
+function FieldError({ message }: { message?: string }) {
+  return (
+    <AnimatePresence>
+      {message && (
+        <motion.p
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mt-1.5 text-xs font-medium text-danger"
+        >
+          {message}
+        </motion.p>
+      )}
+    </AnimatePresence>
   );
 }

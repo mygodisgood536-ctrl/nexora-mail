@@ -13,19 +13,31 @@ import {
 import { relations } from "drizzle-orm";
 
 // Users
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash"),
-  name: text("name"),
-  status: text("status").notNull().default("active"), // active | suspended | deleted
-  role: text("role").notNull().default("user"), // user | admin
-  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
-  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    username: text("username"),
+    fullName: text("full_name"),
+    email: text("email").unique(),
+    passwordHash: text("password_hash"),
+    name: text("name"),
+    status: text("status").notNull().default("active"), // active | suspended | deleted
+    role: text("role").notNull().default("user"), // user | admin
+    registrationStatus: text("registration_status").notNull().default("pending"), // pending | active
+    totpSecretEncrypted: text("totp_secret_encrypted"),
+    totpVerifiedAt: timestamp("totp_verified_at", { withTimezone: true }),
+    totpEnabled: boolean("totp_enabled").notNull().default(false),
+    failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  },
+  (table) => [uniqueIndex("users_username_unique").on(table.username)]
+);
 
 // Mailboxes - one per user
 export const mailboxes = pgTable(
@@ -211,6 +223,39 @@ export const rateLimits = pgTable(
     count: integer("count").notNull().default(0),
   },
   (table) => [index("rate_limits_window_idx").on(table.windowStart)]
+);
+
+// Short-lived, single-use challenges for 2FA, recovery and enrollment
+export const authChallenges = pgTable(
+  "auth_challenges",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    purpose: text("purpose").notNull(), // enroll | login | reset | change_password | recovery
+    tokenHash: text("token_hash").notNull().unique(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("auth_challenges_user_idx").on(table.userId)]
+);
+
+// Single-use recovery codes for loss of authenticator device
+export const recoveryCodes = pgTable(
+  "recovery_codes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull().unique(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("recovery_codes_user_idx").on(table.userId)]
 );
 
 // Sessions (JWT identity + stored record for revocation)

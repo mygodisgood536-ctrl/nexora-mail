@@ -1,29 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #100f0d;
-  --foreground: #ede8e0;
-  --card: #171512;
-  --card-foreground: #ede8e0;
-  --popover: #1b1814;
-  --popover-foreground: #ede8e0;
-  --primary: #b08d57;
-  --primary-foreground: #17120a;
-  --secondary: #1d1a16;
-  --secondary-foreground: #ddd5c9;
-  --muted: #1a1815;
-  --muted-foreground: #9a9186;
-  --accent: #b08d57;
-  --accent-foreground: #17120a;
-  --destructive: #b25a4c;
-  --destructive-foreground: #f7eee9;
-  --border: #2b2620;
-  --input: #1d1a16;
-  --ring: #b08d57;
-  --radius: 0.625rem;
-  --success: #b08d57;
-  --warning: #c2954a;
-  --info: #a89c8c;
+  --background: #f7f4ee;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #8a5a2b;
+  --primary-foreground: #ffffff;
+  --secondary: #f3ede3;
+  --secondary-foreground: #1c1917;
+  --muted: #f1ece3;
+  --muted-foreground: #6b6258;
+  --accent: #8a5a2b;
+  --accent-foreground: #ffffff;
+  --destructive: #a8452f;
+  --destructive-foreground: #ffffff;
+  --border: #e4dcd0;
+  --input: #ffffff;
+  --ring: #8a5a2b;
+  --radius: 0.75rem;
+  --success: #8a5a2b;
+  --warning: #a8701f;
+  --info: #6b6258;
 }
 
 @theme inline {
@@ -50,16 +50,13 @@
   --color-warning: var(--warning);
   --color-info: var(--info);
 
-  --color-accent-50: #faf6ed;
-  --color-accent-100: #f1e7cf;
-  --color-accent-200: #e3cd9c;
-  --color-accent-300: #d3b26e;
-  --color-accent-400: #c49a4e;
-  --color-accent-500: #b08d57;
-  --color-accent-600: #966f3b;
-  --color-accent-700: #78542d;
-  --color-accent-800: #62462a;
-  --color-accent-900: #523b26;
+  --color-canvas: #f7f4ee;
+  --color-surface: #ffffff;
+  --color-ink: #1c1917;
+  --color-line: #e4dcd0;
+  --color-accent-hover: #6f451f;
+  --color-accent-soft: #f3e7d7;
+  --color-danger: #a8452f;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -87,12 +84,12 @@ body {
 }
 
 h1, h2, h3 {
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
 }
 
 .bg-cinematic {
   background:
-    radial-gradient(ellipse 70% 45% at 50% -25%, rgba(176, 141, 87, 0.08), transparent),
+    radial-gradient(ellipse 70% 45% at 50% -25%, rgba(138, 90, 43, 0.07), transparent),
     var(--background);
 }
 
@@ -100,14 +97,11 @@ h1, h2, h3 {
   background-image: none;
 }
 
-.glass {
-  background: #171512;
-  border: 1px solid var(--border);
-}
-
+.glass,
 .glass-strong {
-  background: #1b1814;
-  border: 1px solid #332d25;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 12px 32px rgba(28, 25, 23, 0.05);
 }
 
 .glow-primary,
@@ -124,16 +118,16 @@ h1, h2, h3 {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #332d25;
+  background: #d9cfc1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4136;
+  background: #bdb09f;
 }
 
 ::selection {
-  background: rgba(176, 141, 87, 0.28);
-  color: #fff;
+  background: rgba(138, 90, 43, 0.2);
+  color: #1c1917;
 }
 
 *:focus-visible {
@@ -142,12 +136,12 @@ h1, h2, h3 {
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.35s ease-out both;
+  animation: fade-in-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .email-html-container {
@@ -159,6 +153,6 @@ h1, h2, h3 {
   border: none;
   width: 100%;
   min-height: 200px;
-  background: #14110e;
+  background: #ffffff;
   border-radius: 8px;
 }

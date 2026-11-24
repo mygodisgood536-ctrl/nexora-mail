@@ -3,28 +3,42 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { AuthShell, fieldClass } from "@/components/auth-shell";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || "Sign in failed");
+        setError(data.error || "Sign in failed");
+        return;
+      }
+      if (data.requiresEnrollment) {
+        sessionStorage.setItem("enrollmentToken", data.enrollmentToken);
+        router.push("/setup");
+        return;
+      }
+      if (data.requiresTwoFactor) {
+        sessionStorage.setItem("twoFactorToken", data.challengeToken);
+        router.push("/login/verify");
         return;
       }
       router.push("/mailbox");
@@ -36,75 +50,74 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cinematic flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="h-9 w-9 rounded-lg border border-accent-700/60 flex items-center justify-center">
-              <Mail className="h-4 w-4 text-accent-300" />
-            </div>
-            <span className="text-base font-semibold">Nexora Mail</span>
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">Sign in to your private mailbox</p>
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in with your username and password, then confirm with your authenticator."
+      footer={
+        <>
+          New here?{" "}
+          <Link href="/register" className="font-semibold text-accent hover:text-accent-hover">Create an account</Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="username" className="mb-1.5 block text-sm font-semibold text-ink">Username</label>
+          <input
+            id="username"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="ada.lovelace"
+            className={fieldClass}
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-strong rounded-xl p-7 space-y-5">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-lg bg-[#100f0d] border border-[#2b2620] text-sm focus:outline-none focus:ring-1 focus:ring-accent-500 focus:border-accent-500 placeholder:text-muted-foreground/50"
-                placeholder="you@example.com"
-              />
-            </div>
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-semibold text-ink">Password</label>
+            <Link href="/forgot-password" className="text-xs font-semibold text-accent hover:text-accent-hover">Forgot password?</Link>
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-muted-foreground">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-11 pr-12 py-3 rounded-lg bg-[#100f0d] border border-[#2b2620] text-sm focus:outline-none focus:ring-1 focus:ring-accent-500 focus:border-accent-500 placeholder:text-muted-foreground/50"
-                placeholder="Your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your password"
+              className={`${fieldClass} pr-12`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-muted-foreground transition hover:bg-black/[0.04] hover:text-ink"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-semibold transition-colors disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4" /></>}
-          </button>
-        </form>
+        {error && (
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-xl bg-danger/10 p-3 text-sm font-medium text-danger">
+            {error}
+          </motion.p>
+        )}
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          No account? <Link href="/register" className="text-accent-300 hover:text-accent-200 font-medium">Create one</Link>
+        <button
+          type="submit"
+          disabled={loading}
+          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition hover:bg-accent-hover disabled:opacity-60"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>}
+        </button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Lost your authenticator?{" "}
+          <Link href="/recovery" className="font-semibold text-accent hover:text-accent-hover">Use a recovery code</Link>
         </p>
-      </div>
-    </div>
+      </form>
+    </AuthShell>
   );
 }

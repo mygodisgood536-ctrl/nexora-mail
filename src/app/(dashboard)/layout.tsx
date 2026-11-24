@@ -40,10 +40,10 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-cinematic bg-mesh flex">
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-white/5 glass-strong">
+      <aside className="hidden md:flex w-64 flex-col border-r border-line glass-strong">
         <div className="p-5 flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-lg border border-accent-700/60 flex items-center justify-center">
-            <Mail className="h-4.5 w-4.5 text-accent-300" />
+          <div className="h-9 w-9 rounded-lg border border-accent/60 flex items-center justify-center">
+            <Mail className="h-4.5 w-4.5 text-accent" />
           </div>
           <span className="text-lg font-semibold tracking-tight">Nexora</span>
         </div>
@@ -58,8 +58,8 @@ export default function DashboardLayout({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                   active
-                    ? "bg-accent-500/15 text-accent-300"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    ? "bg-accent/15 text-accent"
+                    : "text-muted-foreground hover:text-foreground hover:bg-black/[0.03]"
                 )}
               >
                 <item.icon className="h-4.5 w-4.5" />
@@ -69,10 +69,10 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/5">
+        <div className="p-3 border-t border-line">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
+            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-black/[0.03] transition-all"
           >
             <LogOut className="h-4.5 w-4.5" />
             Sign out
@@ -81,10 +81,10 @@ export default function DashboardLayout({
       </aside>
 
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/5 px-4 py-3 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 glass-strong border-b border-line px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg border border-accent-700/60 flex items-center justify-center">
-            <Mail className="h-4 w-4 text-accent-300" />
+          <div className="h-8 w-8 rounded-lg border border-accent/60 flex items-center justify-center">
+            <Mail className="h-4 w-4 text-accent" />
           </div>
           <span className="font-semibold">Nexora</span>
         </div>
@@ -118,7 +118,7 @@ export default function DashboardLayout({
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium",
                       pathname.startsWith(item.href)
-                        ? "bg-accent-500/15 text-accent-300"
+                        ? "bg-accent/15 text-accent"
                         : "text-muted-foreground"
                     )}
                   >

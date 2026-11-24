@@ -15,6 +15,13 @@
       "when": 1795237490030,
       "tag": "0001_productive_baron_strucker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795244455117,
+      "tag": "0002_tired_maginty",
+      "breakpoints": true
     }
   ]
 }

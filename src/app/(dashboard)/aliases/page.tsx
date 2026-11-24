@@ -124,7 +124,7 @@ export default function AliasesPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-xl font-semibold flex items-center gap-2">
-            <AtSign className="h-5 w-5 text-accent-400" />
+            <AtSign className="h-5 w-5 text-accent" />
             Aliases
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -133,7 +133,7 @@ export default function AliasesPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-medium transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent text-white text-sm font-medium transition-all"
         >
           <Plus className="h-4 w-4" />
           New alias
@@ -170,8 +170,8 @@ export default function AliasesPage() {
                     className={cn(
                       "flex-1 py-2 rounded-lg text-sm font-medium transition-colors",
                       mode === m
-                        ? "bg-accent-500/20 text-accent-300"
-                        : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                        ? "bg-accent/20 text-accent"
+                        : "bg-black/[0.03] text-muted-foreground hover:bg-white/10"
                     )}
                   >
                     {m === "custom" ? "Custom" : "Random"}
@@ -180,20 +180,20 @@ export default function AliasesPage() {
               </div>
 
               {mode === "custom" ? (
-                <div className="flex items-center gap-0 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                <div className="flex items-center gap-0 rounded-xl bg-black/[0.03] border border-line overflow-hidden">
                   <input
                     value={localPart}
                     onChange={(e) => setLocalPart(e.target.value.toLowerCase().replace(/[^a-z0-9._+-]/g, ""))}
                     placeholder="shopping-alerts"
                     className="flex-1 px-4 py-3 bg-transparent text-sm focus:outline-none"
                   />
-                  <span className="px-3 text-sm text-muted-foreground border-l border-white/10">
+                  <span className="px-3 text-sm text-muted-foreground border-l border-line">
                     @{PLATFORM_DOMAIN}
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <Shuffle className="h-5 w-5 text-accent-400" />
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-black/[0.03] border border-line">
+                  <Shuffle className="h-5 w-5 text-accent" />
                   <span className="text-sm text-muted-foreground">
                     A secure random local-part will be generated
                   </span>
@@ -203,14 +203,14 @@ export default function AliasesPage() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowCreate(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-white/5 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-black/[0.03] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={createAlias}
                   disabled={creating || (mode === "custom" && !localPart)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-medium disabled:opacity-50 transition-all"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-accent hover:bg-accent text-white text-sm font-medium disabled:opacity-50 transition-all"
                 >
                   {creating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -230,12 +230,12 @@ export default function AliasesPage() {
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-6 w-6 animate-spin text-accent-400" />
+          <Loader2 className="h-6 w-6 animate-spin text-accent" />
         </div>
       ) : aliases.length === 0 ? (
         <div className="text-center py-20">
-          <div className="h-14 w-14 rounded-2xl bg-accent-500/10 flex items-center justify-center mx-auto mb-4">
-            <AtSign className="h-6 w-6 text-accent-400" />
+          <div className="h-14 w-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <AtSign className="h-6 w-6 text-accent" />
           </div>
           <p className="font-medium">No aliases yet</p>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
@@ -243,7 +243,7 @@ export default function AliasesPage() {
           </p>
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 rounded-lg bg-accent-600 text-[#17120a] text-sm"
+            className="px-4 py-2 rounded-lg bg-accent text-white text-sm"
           >
             Create alias
           </button>
@@ -261,7 +261,7 @@ export default function AliasesPage() {
                 className={cn(
                   "h-2.5 w-2.5 rounded-full",
                   alias.status === "active"
-                    ? "bg-accent-400"
+                    ? "bg-accent"
                     : alias.status === "paused"
                     ? "bg-stone-400"
                     : "bg-rose-400"
@@ -277,10 +277,10 @@ export default function AliasesPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => copyAddress(alias.fullAddress)}
-                  className="p-2 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-2 rounded-lg hover:bg-black/[0.03] text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {copied === alias.fullAddress ? (
-                    <Check className="h-4 w-4 text-accent-400" />
+                    <Check className="h-4 w-4 text-accent" />
                   ) : (
                     <Copy className="h-4 w-4" />
                   )}
@@ -288,7 +288,7 @@ export default function AliasesPage() {
                 {alias.status === "active" && (
                   <button
                     onClick={() => updateStatus(alias.id, "paused")}
-                    className="p-2 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-stone-400 transition-colors"
+                    className="p-2 rounded-lg hover:bg-black/[0.03] text-muted-foreground hover:text-stone-400 transition-colors"
                     title="Pause"
                   >
                     <Pause className="h-4 w-4" />
@@ -297,7 +297,7 @@ export default function AliasesPage() {
                 {alias.status === "paused" && (
                   <button
                     onClick={() => updateStatus(alias.id, "active")}
-                    className="p-2 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-accent-400 transition-colors"
+                    className="p-2 rounded-lg hover:bg-black/[0.03] text-muted-foreground hover:text-accent transition-colors"
                     title="Reactivate"
                   >
                     <Play className="h-4 w-4" />

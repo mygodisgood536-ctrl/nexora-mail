@@ -7,7 +7,7 @@ export default function PrivacyPage() {
     <LegalLayout title="Privacy Policy">
       <p>
         We collect only the information needed to create and protect your
-        account: your login email, a password hash, and basic security metadata.
+        account: your full name, a unique username, a password hash, and basic security metadata.
         No phone number or email verification code is required to use the service.
       </p>
       <p>

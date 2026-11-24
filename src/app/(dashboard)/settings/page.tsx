@@ -1,7 +1,8 @@
 "use client";
 
-import { Settings, LogOut, Shield, Clock, Mail } from "lucide-react";
+import { Settings, LogOut, Shield, Clock, Mail, KeyRound } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
@@ -16,14 +17,14 @@ export default function SettingsPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold flex items-center gap-2 mb-8">
-        <Settings className="h-5 w-5 text-accent-400" />
+        <Settings className="h-5 w-5 text-accent" />
         Settings
       </h1>
 
       <div className="space-y-4">
         <div className="glass rounded-xl p-5">
           <h2 className="font-medium mb-1 flex items-center gap-2">
-            <Mail className="h-4 w-4 text-accent-400" />
+            <Mail className="h-4 w-4 text-accent" />
             Your mailbox
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -34,7 +35,7 @@ export default function SettingsPage() {
 
         <div className="glass rounded-xl p-5">
           <h2 className="font-medium mb-1 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-accent-400" />
+            <Clock className="h-4 w-4 text-accent" />
             Message retention
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -45,7 +46,7 @@ export default function SettingsPage() {
 
         <div className="glass rounded-xl p-5">
           <h2 className="font-medium mb-1 flex items-center gap-2">
-            <Shield className="h-4 w-4 text-accent-400" />
+            <Shield className="h-4 w-4 text-accent" />
             Permanent aliases
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -54,9 +55,17 @@ export default function SettingsPage() {
           </p>
         </div>
 
+        <Link
+          href="/change-password"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-accent hover:bg-accent-soft transition-colors"
+        >
+          <KeyRound className="h-4 w-4" />
+          Change password
+        </Link>
+
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-rose-400 hover:bg-rose-500/10 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-danger hover:bg-danger/10 transition-colors"
         >
           <LogOut className="h-4 w-4" />
           Sign out

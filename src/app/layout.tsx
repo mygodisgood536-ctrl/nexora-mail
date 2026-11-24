@@ -34,19 +34,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
         <Toaster
-          theme="dark"
+          theme="light"
           position="top-right"
           toastOptions={{
             style: {
-              background: "#1b1814",
-              border: "1px solid #332d25",
-              color: "#ede8e0",
-              borderRadius: "10px",
+              background: "#ffffff",
+              border: "1px solid #e4dcd0",
+              color: "#1c1917",
+              borderRadius: "12px",
+              boxShadow: "0 12px 32px rgba(28,25,23,0.08)",
             },
           }}
         />

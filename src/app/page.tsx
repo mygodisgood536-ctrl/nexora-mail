@@ -37,8 +37,8 @@ export default function LandingPage() {
       <header className="border-b border-[#26221d]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg border border-accent-700/60 flex items-center justify-center">
-              <Mail className="h-4 w-4 text-accent-300" />
+            <div className="h-8 w-8 rounded-lg border border-accent/60 flex items-center justify-center">
+              <Mail className="h-4 w-4 text-accent" />
             </div>
             <span className="text-base font-semibold tracking-tight">Nexora Mail</span>
           </Link>
@@ -48,7 +48,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/register"
-              className="px-4 py-2 rounded-lg border border-accent-700/60 text-accent-200 hover:bg-accent-700/10 transition-colors"
+              className="px-4 py-2 rounded-lg border border-accent/60 text-accent hover:bg-accent/10 transition-colors"
             >
               Create account
             </Link>
@@ -59,13 +59,13 @@ export default function LandingPage() {
       <main>
         <section className="max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-14 md:gap-20 items-center">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent-400 mb-5">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent mb-5">
               Permanent email aliases
             </p>
             <h1 className="text-4xl md:text-5xl font-semibold leading-[1.12] tracking-tight">
               One mailbox.
               <br />
-              <span className="text-accent-200">Every address you own.</span>
+              <span className="text-accent">Every address you own.</span>
             </h1>
             <p className="mt-6 text-base leading-relaxed text-muted-foreground max-w-lg">
               Create a separate address for each website and service. Verification codes,
@@ -75,7 +75,7 @@ export default function LandingPage() {
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-accent hover:bg-accent text-white text-sm font-semibold transition-colors"
               >
                 Create your account
                 <ArrowRight className="h-4 w-4" />
@@ -88,13 +88,13 @@ export default function LandingPage() {
               </Link>
             </div>
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-2"><Shield className="h-3.5 w-3.5 text-accent-400" /> Private by default</span>
-              <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-accent-400" /> 10-day retention</span>
-              <span className="flex items-center gap-2"><KeyRound className="h-3.5 w-3.5 text-accent-400" /> Built for OTPs</span>
+              <span className="flex items-center gap-2"><Shield className="h-3.5 w-3.5 text-accent" /> Private by default</span>
+              <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-accent" /> 10-day retention</span>
+              <span className="flex items-center gap-2"><KeyRound className="h-3.5 w-3.5 text-accent" /> Built for OTPs</span>
             </div>
           </div>
 
-          <div className="border border-[#2b2620] rounded-xl bg-[#171512] overflow-hidden">
+          <div className="border border-[#2b2620] rounded-xl bg-surface overflow-hidden">
             <div className="px-5 py-4 border-b border-[#2b2620] flex items-center justify-between">
               <span className="text-sm font-medium">Your mailbox</span>
               <span className="text-xs text-muted-foreground">3 messages</span>
@@ -105,10 +105,10 @@ export default function LandingPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{item.from}</span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                     </div>
                     <p className="text-sm text-muted-foreground truncate mt-0.5">{item.subject}</p>
-                    <p className="text-xs text-accent-300/80 mt-1.5 flex items-center gap-1">
+                    <p className="text-xs text-accent/80 mt-1.5 flex items-center gap-1">
                       <AtSign className="h-3 w-3" /> {item.alias}
                     </p>
                   </div>
@@ -122,7 +122,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="border-y border-[#26221d] bg-[#13110f]">
+        <section className="border-y border-[#26221d] bg-surface">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <h2 className="text-2xl font-semibold tracking-tight">Built for a narrow purpose</h2>
             <p className="mt-2 text-sm text-muted-foreground max-w-xl">
@@ -130,8 +130,8 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 grid md:grid-cols-3 gap-6">
               {features.map((feature, i) => (
-                <div key={feature.title} className="border-t border-accent-700/50 pt-5">
-                  <span className="text-xs text-accent-400">0{i + 1}</span>
+                <div key={feature.title} className="border-t border-accent/50 pt-5">
+                  <span className="text-xs text-accent">0{i + 1}</span>
                   <h3 className="mt-2 text-base font-medium">{feature.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.body}</p>
                 </div>
@@ -149,7 +149,7 @@ export default function LandingPage() {
               ["03", "Receive and forget", "Messages land in your mailbox and disappear after ten days."],
             ].map(([num, title, body]) => (
               <div key={num}>
-                <p className="text-sm font-medium text-accent-400">{num}</p>
+                <p className="text-sm font-medium text-accent">{num}</p>
                 <h3 className="mt-2 text-base font-medium">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
               </div>
@@ -158,14 +158,14 @@ export default function LandingPage() {
         </section>
 
         <section className="max-w-6xl mx-auto px-6 pb-24">
-          <div className="border border-[#2b2620] rounded-xl bg-[#171512] px-8 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="border border-[#2b2620] rounded-xl bg-surface px-8 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h2 className="text-xl font-semibold tracking-tight">Start with one address.</h2>
               <p className="mt-2 text-sm text-muted-foreground">No DNS. No external mailbox. No forwarding.</p>
             </div>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-accent-600 hover:bg-accent-500 text-[#17120a] text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-accent hover:bg-accent text-white text-sm font-semibold transition-colors"
             >
               Create account
               <ArrowRight className="h-4 w-4" />
